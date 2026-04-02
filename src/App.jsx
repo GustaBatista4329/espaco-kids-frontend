@@ -219,7 +219,11 @@ function Btn({ children, onClick, variant = "primary", disabled, loading, full, 
   );
 }
 
-function Input({ label, icon: Icon, error, style: sx, ...props }) {
+function Input({ label, icon: Icon, error, style: sx, showToggle, ...props }) {
+  const [visible, setVisible] = useState(false);
+  const isPassword = props.type === "password";
+  const inputType = isPassword && showToggle ? (visible ? "text" : "password") : props.type;
+
   return (
     <div style={{ marginBottom: 16, ...sx }}>
       {label && <label style={{ fontSize: 13, fontWeight: 700, color: T.textSecondary, marginBottom: 6, display: "block", fontFamily: "'Nunito', sans-serif" }}>{label}</label>}
@@ -234,7 +238,17 @@ function Input({ label, icon: Icon, error, style: sx, ...props }) {
           border: "none", background: "transparent", padding: "13px 0",
           fontSize: 15, color: T.textPrimary, outline: "none", width: "100%",
           fontFamily: "'Nunito', sans-serif", fontWeight: 600,
-        }} {...props} />
+        }} {...props} type={inputType} />
+        {isPassword && showToggle && (
+          <button type="button" onClick={() => setVisible((v) => !v)} style={{
+            background: "none", border: "none", cursor: "pointer", padding: 0,
+            display: "flex", alignItems: "center", color: T.textSecondary, flexShrink: 0,
+          }}>
+            {visible
+              ? <Eye size={18} color={T.textSecondary} style={{ opacity: 0.5 }} />
+              : <Eye size={18} color={T.textSecondary} />}
+          </button>
+        )}
       </div>
       {error && <span style={{ fontSize: 12, color: T.red, marginTop: 4, display: "block", fontFamily: "'Nunito', sans-serif" }}>{error}</span>}
     </div>
@@ -540,7 +554,7 @@ function LoginPage() {
           onChange={(e) => setForm({ ...form, login: e.target.value })}
           onKeyDown={(e) => e.key === "Enter" && handleLogin()} />
 
-        <Input label="Senha" icon={Eye} placeholder="Sua senha" type="password" value={form.senha}
+        <Input label="Senha" icon={Eye} placeholder="Sua senha" type="password" showToggle value={form.senha}
           onChange={(e) => setForm({ ...form, senha: e.target.value })}
           onKeyDown={(e) => e.key === "Enter" && handleLogin()} />
 
@@ -649,12 +663,11 @@ function CadastrarUsuario() {
           onChange={(e) => setForm({ ...form, nome: e.target.value })} />
         <Input label="Login" icon={Pencil} placeholder="Ex: maria.silva" value={form.login}
           onChange={(e) => setForm({ ...form, login: e.target.value })} />
-        <Input label="Senha" icon={Eye} placeholder="Senha de acesso" type="password" value={form.senha}
+        <Input label="Senha" icon={Eye} placeholder="Senha de acesso" type="password" showToggle value={form.senha}
           onChange={(e) => setForm({ ...form, senha: e.target.value })} />
         <Select label="Perfil" placeholder="Selecione o perfil" value={form.perfil}
           onChange={(v) => setForm({ ...form, perfil: v })}
           options={[
-            { value: "ADM", label: "Administrador(a)" },
             { value: "PROFESSORA", label: "Professora" },
             { value: "RESPONSAVEL", label: "Responsável" },
           ]} />
@@ -664,6 +677,14 @@ function CadastrarUsuario() {
       </Card>
     </div>
   );
+}
+
+function formatarTelefone(valor) {
+  const nums = valor.replace(/\D/g, "").slice(0, 11);
+  if (nums.length <= 2) return nums.length ? `(${nums}` : "";
+  if (nums.length <= 6) return `(${nums.slice(0, 2)}) ${nums.slice(2)}`;
+  if (nums.length <= 10) return `(${nums.slice(0, 2)}) ${nums.slice(2, 6)}-${nums.slice(6)}`;
+  return `(${nums.slice(0, 2)}) ${nums.slice(2, 7)}-${nums.slice(7)}`;
 }
 
 function CadastrarResponsavel() {
@@ -699,7 +720,7 @@ function CadastrarResponsavel() {
         <Input label="ID do Usuário" icon={Users} placeholder="Ex: 5" type="number" value={form.usuarioId}
           onChange={(e) => setForm({ ...form, usuarioId: e.target.value })} />
         <Input label="Telefone" icon={Phone} placeholder="Ex: (62) 99999-9999" value={form.telefone}
-          onChange={(e) => setForm({ ...form, telefone: e.target.value })} />
+          onChange={(e) => setForm({ ...form, telefone: formatarTelefone(e.target.value) })} />
         <Btn loading={loading} onClick={submit} full variant="secondary" style={{ marginTop: 8 }}>
           <Users size={18} /> Cadastrar Responsável
         </Btn>
@@ -748,8 +769,18 @@ function CadastrarAluno() {
           onChange={(e) => setForm({ ...form, nome: e.target.value })} />
         <Input label="Data de Nascimento" type="date" value={form.dataNascimento}
           onChange={(e) => setForm({ ...form, dataNascimento: e.target.value })} />
-        <Input label="Série" icon={GraduationCap} placeholder="Ex: 3º ano" value={form.serie}
-          onChange={(e) => setForm({ ...form, serie: e.target.value })} />
+        <Select label="Série" placeholder="Selecione a série" value={form.serie}
+          onChange={(v) => setForm({ ...form, serie: v })}
+          options={[
+            { value: "Jardim 1", label: "Jardim 1" },
+            { value: "Jardim 2", label: "Jardim 2" },
+            { value: "Jardim 3", label: "Jardim 3" },
+            { value: "1º Ano", label: "1º Ano" },
+            { value: "2º Ano", label: "2º Ano" },
+            { value: "3º Ano", label: "3º Ano" },
+            { value: "4º Ano", label: "4º Ano" },
+            { value: "5º Ano", label: "5º Ano" },
+          ]} />
         <Btn loading={loading} onClick={submit} full variant="success" style={{ marginTop: 8 }}>
           <Baby size={18} /> Cadastrar Aluno
         </Btn>
