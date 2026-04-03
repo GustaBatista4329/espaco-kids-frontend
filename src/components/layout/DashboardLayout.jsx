@@ -95,9 +95,9 @@ export function DashboardLayout() {
               style={{ color: T.red, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
               <AtSign size={14} /> @tia_dalqui
             </a>
-            <a href="https://wa.me/5562986309743" target="_blank" rel="noopener"
+            <a href="https://wa.me/556285747327" target="_blank" rel="noopener"
               style={{ color: T.green, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
-              <Phone size={14} /> (62) 98630-9743
+              <Phone size={14} /> (62) 8574-7327
             </a>
           </div>
         </footer>

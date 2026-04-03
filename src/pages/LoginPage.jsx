@@ -99,7 +99,7 @@ export function LoginPage() {
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
             <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <Phone size={13} /> (62) 98630-9743
+              <Phone size={13} /> (62) 8574-7327
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <AtSign size={13} /> @tia_dalqui

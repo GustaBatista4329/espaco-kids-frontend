@@ -13,7 +13,7 @@ export function Logo({ size = "md" }) {
           boxShadow: `0 4px 12px ${T.red}44`,
           transform: "rotate(-3deg)",
         }}>
-          <span style={{ color: "#fff", fontSize: 18 * s, fontWeight: 900, fontFamily: "'Nunito', sans-serif" }}>A</span>
+          <span style={{ color: "#fff", fontSize: 18 * s, fontWeight: 900, fontFamily: "'Nunito', sans-serif" }}>D</span>
         </div>
         <div style={{
           position: "absolute", top: -4 * s, right: -6 * s,

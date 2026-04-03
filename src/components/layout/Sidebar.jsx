@@ -74,7 +74,7 @@ export function Sidebar({ items, active, onNavigate, onLogout, user, open, onClo
         <div style={{ padding: "12px 16px 20px", borderTop: `1px solid ${T.lightGray}` }}>
           <div style={{ marginBottom: 12, padding: "10px 14px", background: T.blueLight, borderRadius: 12, fontSize: 12, color: T.blue, fontFamily: "'Nunito', sans-serif" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700, marginBottom: 4 }}>
-              <Phone size={13} /> (62) 98630-9743
+              <Phone size={13} /> (62) 8574-7327
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700 }}>
               <AtSign size={13} /> @tia_dalqui
