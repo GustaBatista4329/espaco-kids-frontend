@@ -38,5 +38,52 @@ export function createApi(getToken) {
     editarUsuario: (id, dto) => req("PUT", `/autenticacao/usuarios/${id}`, dto),
     alterarStatusUsuario: (id, ativo) => req("PATCH", `/autenticacao/usuarios/${id}/status`, { ativo }),
     listarTodosAlunos: () => req("GET", "/aluno"),
+    uploadAtividade: (titulo, descricao, arquivo) => {
+      const formData = new FormData();
+      formData.append("titulo", titulo);
+      formData.append("descricao", descricao || "");
+      formData.append("arquivo", arquivo);
+      const token = getToken();
+      return fetch(`${API_BASE}/atividade/upload`, {
+        method: "POST",
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: formData,
+      }).then(async (res) => {
+        if (res.status === 401) throw new Error("TOKEN_EXPIRED");
+        if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.mensagem || `Erro ${res.status}`); }
+        const text = await res.text();
+        return text ? JSON.parse(text) : null;
+      });
+    },
+    listarBancoAtividades: () => req("GET", "/atividade/banco"),
+    excluirAtividadeBanco: (id) => req("DELETE", `/atividade/banco/${id}`),
+    atribuirAtividade: (dto) => req("POST", "/atividade/atribuir", dto),
+    removerAtribuicao: (id) => req("DELETE", `/atividade/atribuicao/${id}`),
+    listarAtividadesAluno: (alunoId) => req("GET", `/atividade/aluno/${alunoId}`),
+    visualizarAtividade: (nomeArquivo) => {
+      const token = getToken();
+      return fetch(`${API_BASE}/atividade/download/${encodeURIComponent(nomeArquivo)}`, {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      }).then(async (res) => {
+        if (!res.ok) throw new Error("Erro ao carregar arquivo");
+        const blob = await res.blob();
+        return window.URL.createObjectURL(blob);
+      });
+    },
+    downloadAtividade: (nomeArquivo) => {
+      const token = getToken();
+      return fetch(`${API_BASE}/atividade/download/${encodeURIComponent(nomeArquivo)}`, {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      }).then(async (res) => {
+        if (!res.ok) throw new Error("Erro ao baixar arquivo");
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = nomeArquivo;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      });
+    },
   };
 }

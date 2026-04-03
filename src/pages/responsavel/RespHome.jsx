@@ -1,31 +1,81 @@
 import { useState, useEffect } from "react";
-import { Baby, Calendar, GraduationCap, Clock, BookOpen, AlertCircle, Loader2 } from "lucide-react";
+import { Baby, Calendar, GraduationCap, Clock, BookOpen, AlertCircle, Loader2, FileText, Download, Eye } from "lucide-react";
 import { T } from "../../constants/theme";
 import { diaLabel } from "../../constants/days";
 import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/ToastContext";
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
+import { Btn } from "../../components/ui/Btn";
 import { StatCard } from "../../components/ui/StatCard";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { PageHeader } from "../../components/layout/PageHeader";
+import { PdfViewer } from "../../components/ui/PdfViewer";
 
 const DIA_ORDER = ["SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
 
+function diasRestantes(dataAtribuicao) {
+  if (!dataAtribuicao) return null;
+  const atrib = new Date(dataAtribuicao);
+  const diff = Math.floor((Date.now() - atrib.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.max(0, 7 - diff);
+}
+
+function badgeDias(dias) {
+  if (dias >= 5) return T.green;
+  if (dias >= 3) return T.blue;
+  return T.red;
+}
+
 export function RespHome() {
   const { api, user } = useAuth();
+  const toast = useToast();
+  const rid = user?.responsavelId;
   const [alunos, setAlunos] = useState([]);
   const [horarios, setHorarios] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const rid = user?.responsavelId;
+  const [atividadesPorAluno, setAtividadesPorAluno] = useState({});
+  const [loading, setLoading] = useState(!!rid);
+  const [downloadingId, setDownloadingId] = useState(null);
+  const [pdfViewer, setPdfViewer] = useState(null);
+
+  function closePdfViewer() {
+    if (pdfViewer?.url) window.URL.revokeObjectURL(pdfViewer.url);
+    setPdfViewer(null);
+  }
+
+  async function handleVisualizar(atv) {
+    try {
+      const url = await api.visualizarAtividade(atv.nomeArquivo);
+      setPdfViewer({ titulo: atv.titulo, url, nomeArquivo: atv.nomeArquivo });
+    } catch (e) { toast(e.message, "error"); }
+  }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!rid) { setLoading(false); return; }
+    if (!rid) return;
     Promise.all([
       api.buscarAlunosDoResponsavel(rid).catch(() => []),
       api.buscarHorariosPorResponsavel(rid).catch(() => []),
-    ]).then(([a, h]) => { setAlunos(a); setHorarios(h); }).finally(() => setLoading(false));
+    ]).then(([a, h]) => {
+      setAlunos(a);
+      setHorarios(h);
+      // Carregar atividades de cada aluno
+      Promise.all(
+        a.map((aluno) => api.listarAtividadesAluno(aluno.id).then((ativs) => ({ alunoId: aluno.id, atividades: ativs })).catch(() => ({ alunoId: aluno.id, atividades: [] })))
+      ).then((results) => {
+        const map = {};
+        results.forEach(({ alunoId, atividades }) => { map[alunoId] = atividades; });
+        setAtividadesPorAluno(map);
+      });
+    }).finally(() => setLoading(false));
   }, [rid, api]);
+
+  async function handleDownload(atividade) {
+    setDownloadingId(atividade.id);
+    try {
+      await api.downloadAtividade(atividade.nomeArquivo);
+    } catch (e) { toast(e.message, "error"); }
+    setDownloadingId(null);
+  }
 
   if (!rid) return (
     <Card>
@@ -47,13 +97,24 @@ export function RespHome() {
     grouped[h.diaSemana].push(h);
   });
 
+  const totalAtividades = Object.values(atividadesPorAluno).reduce((acc, arr) => acc + arr.length, 0);
+
   return (
     <div>
-      <PageHeader title="Meus Filhos" subtitle="Acompanhe os horários de aula do reforço" />
+      {pdfViewer && (
+        <PdfViewer
+          titulo={pdfViewer.titulo}
+          url={pdfViewer.url}
+          onClose={closePdfViewer}
+          onDownload={() => api.downloadAtividade(pdfViewer.nomeArquivo).catch((e) => toast(e.message, "error"))}
+        />
+      )}
+      <PageHeader title="Meus Filhos" subtitle="Acompanhe os horários e atividades do reforço" />
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 32 }}>
         <StatCard icon={Baby} label="Filhos matriculados" value={alunos.length} color={T.green} />
         <StatCard icon={Calendar} label="Aulas agendadas" value={horarios.length} color={T.blue} />
+        <StatCard icon={FileText} label="Atividades pendentes" value={totalAtividades} color={T.red} />
       </div>
 
       {alunos.length > 0 && (
@@ -110,6 +171,61 @@ export function RespHome() {
           ))}
         </>
       )}
+
+      {/* Atividades por aluno */}
+      {alunos.map((a) => {
+        const atividades = atividadesPorAluno[a.id] || [];
+        if (atividades.length === 0) return null;
+        return (
+          <div key={a.id} style={{ marginTop: 28 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 800, color: T.textPrimary, marginBottom: 12, fontFamily: "'Nunito', sans-serif", display: "flex", alignItems: "center", gap: 8 }}>
+              <FileText size={18} color={T.red} /> Atividades — {a.nome}
+            </h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+              {atividades.map((atv) => {
+                const dias = diasRestantes(atv.dataAtribuicao);
+                return (
+                  <Card key={atv.id} style={{ position: "relative", overflow: "hidden" }}>
+                    <div style={{
+                      position: "absolute", top: 0, left: 0, right: 0, height: 4,
+                      background: `linear-gradient(90deg, ${T.red}, ${T.red}88)`,
+                    }} />
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginTop: 4 }}>
+                      <div style={{
+                        width: 42, height: 42, borderRadius: 12, background: T.redLight, flexShrink: 0,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        <FileText size={20} color={T.red} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: T.textPrimary, fontFamily: "'Nunito', sans-serif" }}>{atv.titulo}</div>
+                        {atv.descricao && (
+                          <div style={{ fontSize: 12, color: T.textSecondary, fontFamily: "'Nunito', sans-serif", marginTop: 2 }}>{atv.descricao}</div>
+                        )}
+                        <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+                          {dias !== null && (
+                            <Badge color={badgeDias(dias)}>
+                              {dias === 0 ? "Último dia!" : `${dias} dia${dias !== 1 ? "s" : ""} restante${dias !== 1 ? "s" : ""}`}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                      <Btn full variant="ghost" onClick={() => handleVisualizar(atv)} style={{ fontSize: 13, color: T.blue }}>
+                        <Eye size={14} /> Ver
+                      </Btn>
+                      <Btn full variant="ghost" loading={downloadingId === atv.id} onClick={() => handleDownload(atv)} style={{ fontSize: 13 }}>
+                        <Download size={14} /> Baixar
+                      </Btn>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
 
       {alunos.length === 0 && horarios.length === 0 && (
         <EmptyState icon={BookOpen} title="Tudo tranquilo por aqui" subtitle="Seus filhos ainda não possuem horários agendados" />

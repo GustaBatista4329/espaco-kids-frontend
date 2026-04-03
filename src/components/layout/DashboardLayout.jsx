@@ -14,6 +14,7 @@ import { VerAlunos } from "../../pages/adm/VerAlunos";
 import { ListarHorarios } from "../../pages/adm/ListarHorarios";
 import { AtualizarSenha } from "../../pages/adm/AtualizarSenha";
 import { ListarUsuarios } from "../../pages/adm/ListarUsuarios";
+import { BancoAtividades } from "../../pages/shared/BancoAtividades";
 import { ProfHome } from "../../pages/professora/ProfHome";
 import { ProfResponsaveis } from "../../pages/professora/ProfResponsaveis";
 import { ProfTodosAlunos } from "../../pages/professora/ProfTodosAlunos";
@@ -31,6 +32,7 @@ function renderAdmPage(page, pageParams, navigate) {
     case "ver-alunos": return <VerAlunos params={pageParams} onNavigate={navigate} />;
     case "listar-horarios": return <ListarHorarios />;
     case "listar-usuarios": return <ListarUsuarios />;
+    case "banco-atividades": return <BancoAtividades />;
     case "atualizar-senha": return <AtualizarSenha />;
     default: return <AdmHome onNavigate={navigate} />;
   }
@@ -42,6 +44,7 @@ function renderProfPage(page, pageParams, navigate) {
     case "responsaveis": return <ProfResponsaveis onNavigate={navigate} />;
     case "alunos": return <ProfTodosAlunos />;
     case "prof-ver-alunos": return <ProfVerAlunos params={pageParams} onNavigate={navigate} />;
+    case "banco-atividades": return <BancoAtividades />;
     default: return <ProfHome />;
   }
 }

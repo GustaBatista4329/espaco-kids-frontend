@@ -1,4 +1,4 @@
-import { Home, UserPlus, Users, Baby, Clock, ClipboardList, Calendar, KeyRound, GraduationCap } from "lucide-react";
+import { Home, UserPlus, Users, Baby, Clock, ClipboardList, Calendar, KeyRound, GraduationCap, FileText } from "lucide-react";
 
 export const ADM_MENU = [
   { id: "home", label: "Início", icon: Home },
@@ -9,6 +9,7 @@ export const ADM_MENU = [
   { id: "listar-responsaveis", label: "Responsáveis", icon: ClipboardList },
   { id: "listar-horarios", label: "Todos Horários", icon: Calendar },
   { id: "listar-usuarios", label: "Usuários", icon: Users },
+  { id: "banco-atividades", label: "Atividades", icon: FileText },
   { id: "atualizar-senha", label: "Atualizar Senha", icon: KeyRound },
 ];
 
@@ -20,4 +21,5 @@ export const PROF_MENU = [
   { id: "home", label: "Painel", icon: Home },
   { id: "responsaveis", label: "Responsáveis", icon: Users },
   { id: "alunos", label: "Todos Alunos", icon: GraduationCap },
+  { id: "banco-atividades", label: "Atividades", icon: FileText },
 ];
