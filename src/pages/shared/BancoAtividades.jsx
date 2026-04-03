@@ -31,20 +31,40 @@ export function BancoAtividades() {
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
-  const [atribuirForm, setAtribuirForm] = useState({ bancoAtividadeId: "", alunoId: "" });
+  const [atribuirForm, setAtribuirForm] = useState({ bancoAtividadeId: "", alunoId: "", enunciado: "" });
   const [atribuindo, setAtribuindo] = useState(false);
+
+  const [atribuicoes, setAtribuicoes] = useState([]);
+  const [loadingAtribuicoes, setLoadingAtribuicoes] = useState(false);
+  const [removendoId, setRemovendoId] = useState(null);
 
   const [deletingId, setDeletingId] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
 
-  const [pdfViewer, setPdfViewer] = useState(null); // { titulo, url, nomeArquivo }
+  const [pdfViewer, setPdfViewer] = useState(null);
+
+  function carregarAtribuicoes(listaAlunos) {
+    setLoadingAtribuicoes(true);
+    Promise.all(
+      listaAlunos.map((a) =>
+        api.listarAtividadesAluno(a.id)
+          .then((ativs) => ativs.map((atv) => ({ ...atv, nomeAluno: a.nome })))
+          .catch(() => [])
+      )
+    ).then((results) => {
+      const todas = results.flat().sort((a, b) => new Date(b.dataAtribuicao) - new Date(a.dataAtribuicao));
+      setAtribuicoes(todas);
+    }).finally(() => setLoadingAtribuicoes(false));
+  }
 
   useEffect(() => {
     api.listarBancoAtividades().then(setBanco).catch(() => toast("Erro ao carregar banco", "error")).finally(() => setLoadingBanco(false));
-    api.listarTodosAlunos().then(setAlunos).catch(() => {});
+    api.listarTodosAlunos().then((lista) => {
+      setAlunos(lista);
+      carregarAtribuicoes(lista);
+    }).catch(() => {});
   }, [api]);
 
-  // Limpar blob URL ao fechar o viewer
   function closePdfViewer() {
     if (pdfViewer?.url) window.URL.revokeObjectURL(pdfViewer.url);
     setPdfViewer(null);
@@ -57,7 +77,6 @@ export function BancoAtividades() {
     } catch (e) { toast(e.message, "error"); }
   }
 
-  // Drag & drop handlers
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
     setIsDragging(true);
@@ -122,11 +141,24 @@ export function BancoAtividades() {
       await api.atribuirAtividade({
         bancoAtividadeId: Number(atribuirForm.bancoAtividadeId),
         alunoId: Number(atribuirForm.alunoId),
+        enunciado: atribuirForm.enunciado || null,
       });
       toast("Atividade enviada para o aluno!");
-      setAtribuirForm({ bancoAtividadeId: "", alunoId: "" });
+      setAtribuirForm({ bancoAtividadeId: "", alunoId: "", enunciado: "" });
+      carregarAtribuicoes(alunos);
     } catch (e) { toast(e.message, "error"); }
     setAtribuindo(false);
+  }
+
+  async function handleRemoverAtribuicao(atv) {
+    if (!window.confirm(`Remover "${atv.titulo}" de ${atv.nomeAluno}?`)) return;
+    setRemovendoId(atv.id);
+    try {
+      await api.removerAtribuicao(atv.id);
+      setAtribuicoes((prev) => prev.filter((x) => x.id !== atv.id));
+      toast("Atribuição removida!");
+    } catch (e) { toast(e.message, "error"); }
+    setRemovendoId(null);
   }
 
   function formatData(str) {
@@ -165,7 +197,6 @@ export function BancoAtividades() {
       {/* TAB: Banco de PDFs */}
       {tab === "banco" && (
         <div>
-          {/* Formulário de upload */}
           <Card style={{ marginBottom: 24 }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: T.textPrimary, fontFamily: "'Nunito', sans-serif", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
               <Upload size={18} color={T.red} /> Enviar novo PDF
@@ -175,7 +206,6 @@ export function BancoAtividades() {
             <Input label="Descrição (opcional)" placeholder="Breve descrição da atividade" value={uploadForm.descricao}
               onChange={(e) => setUploadForm({ ...uploadForm, descricao: e.target.value })} />
 
-            {/* Zona de drag & drop */}
             <div style={{ marginBottom: 16 }}>
               <label style={{ fontSize: 13, fontWeight: 700, color: T.textSecondary, marginBottom: 6, display: "block", fontFamily: "'Nunito', sans-serif" }}>
                 Arquivo PDF
@@ -186,12 +216,9 @@ export function BancoAtividades() {
                 onDrop={handleDrop}
                 style={{
                   border: `2px dashed ${isDragging ? T.red : uploadForm.arquivo ? T.green : T.textSecondary + "44"}`,
-                  borderRadius: 14,
-                  padding: "24px 20px",
+                  borderRadius: 14, padding: "24px 20px",
                   background: isDragging ? T.redLight : uploadForm.arquivo ? T.greenLight : T.lightGray,
-                  textAlign: "center",
-                  transition: "all 0.2s",
-                  cursor: "pointer",
+                  textAlign: "center", transition: "all 0.2s", cursor: "pointer",
                 }}
               >
                 <label style={{ cursor: "pointer", display: "block" }}>
@@ -204,13 +231,8 @@ export function BancoAtividades() {
                       ou <span style={{ color: T.red, fontWeight: 700 }}>clique para selecionar</span>
                     </div>
                   )}
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept=".pdf"
-                    style={{ display: "none" }}
-                    onChange={(e) => setUploadForm({ ...uploadForm, arquivo: e.target.files[0] || null })}
-                  />
+                  <input ref={fileRef} type="file" accept=".pdf" style={{ display: "none" }}
+                    onChange={(e) => setUploadForm({ ...uploadForm, arquivo: e.target.files[0] || null })} />
                 </label>
                 {uploadForm.arquivo && (
                   <button onClick={() => { setUploadForm({ ...uploadForm, arquivo: null }); if (fileRef.current) fileRef.current.value = ""; }}
@@ -226,7 +248,6 @@ export function BancoAtividades() {
             </Btn>
           </Card>
 
-          {/* Lista do banco */}
           {loadingBanco ? (
             <div style={{ textAlign: "center", padding: 40 }}>
               <Loader2 size={32} color={T.red} style={{ animation: "spin 1s linear infinite" }} />
@@ -237,31 +258,21 @@ export function BancoAtividades() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
               {banco.map((item) => (
                 <Card key={item.id} style={{ position: "relative", overflow: "hidden" }}>
-                  <div style={{
-                    position: "absolute", top: 0, left: 0, right: 0, height: 4,
-                    background: `linear-gradient(90deg, ${T.red}, ${T.red}88)`,
-                  }} />
-                  <div
-                    onClick={() => handleVisualizar(item)}
-                    style={{ display: "flex", alignItems: "flex-start", gap: 14, marginTop: 4, cursor: "pointer" }}
-                  >
-                    <div style={{
-                      width: 44, height: 44, borderRadius: 12, background: T.redLight, flexShrink: 0,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: `linear-gradient(90deg, ${T.red}, ${T.red}88)` }} />
+                  <div onClick={() => handleVisualizar(item)} style={{ display: "flex", alignItems: "flex-start", gap: 14, marginTop: 4, cursor: "pointer" }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: T.redLight, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <FileText size={22} color={T.red} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 800, color: T.textPrimary, fontFamily: "'Nunito', sans-serif" }}>{item.titulo}</div>
                       {item.descricao && (
-                        <div style={{
-                          fontSize: 12, color: T.textSecondary, fontFamily: "'Nunito', sans-serif",
-                          marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                        }}>{item.descricao}</div>
+                        <div style={{ fontSize: 12, color: T.textSecondary, fontFamily: "'Nunito', sans-serif", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {item.descricao}
+                        </div>
                       )}
                       <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
                         <Badge color={T.red}>PDF</Badge>
-                        {item.criadoEm && <Badge color={T.warmGray}>{formatData(item.criadoEm)}</Badge>}
+                        {item.criadoEm && <Badge color={T.warmGray}>Adicionado em {formatData(item.criadoEm)}</Badge>}
                       </div>
                     </div>
                   </div>
@@ -285,28 +296,91 @@ export function BancoAtividades() {
 
       {/* TAB: Enviar para Aluno */}
       {tab === "atribuir" && (
-        <Card style={{ maxWidth: 520 }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: T.textPrimary, fontFamily: "'Nunito', sans-serif", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
-            <Send size={18} color={T.red} /> Atribuir atividade
+        <div>
+          <Card style={{ maxWidth: 520, marginBottom: 32 }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: T.textPrimary, fontFamily: "'Nunito', sans-serif", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+              <Send size={18} color={T.red} /> Atribuir atividade
+            </div>
+            <Select
+              label="Atividade"
+              placeholder="Selecione uma atividade"
+              options={banco.map((b) => ({ value: String(b.id), label: b.titulo }))}
+              value={atribuirForm.bancoAtividadeId}
+              onChange={(val) => setAtribuirForm({ ...atribuirForm, bancoAtividadeId: val })}
+            />
+            <Select
+              label="Aluno"
+              placeholder="Selecione o aluno"
+              options={alunos.map((a) => ({ value: String(a.id), label: `${a.nome} — ${a.serie}` }))}
+              value={atribuirForm.alunoId}
+              onChange={(val) => setAtribuirForm({ ...atribuirForm, alunoId: val })}
+            />
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 13, fontWeight: 700, color: T.textSecondary, marginBottom: 6, display: "block", fontFamily: "'Nunito', sans-serif" }}>
+                Enunciado (opcional)
+              </label>
+              <textarea
+                placeholder="Ex: Resolver os exercícios da página 3 e 4..."
+                value={atribuirForm.enunciado}
+                onChange={(e) => setAtribuirForm({ ...atribuirForm, enunciado: e.target.value })}
+                rows={3}
+                style={{
+                  width: "100%", padding: "13px 14px", borderRadius: 12,
+                  border: "2px solid transparent", background: T.lightGray,
+                  fontSize: 15, color: T.textPrimary, fontWeight: 600,
+                  fontFamily: "'Nunito', sans-serif", outline: "none", resize: "vertical",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+            <Btn loading={atribuindo} onClick={handleAtribuir} full>
+              <Send size={16} /> Enviar Atividade
+            </Btn>
+          </Card>
+
+          {/* Lista de atribuições */}
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: T.textPrimary, fontFamily: "'Nunito', sans-serif", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+              <FileText size={18} color={T.blue} /> Atividades Enviadas
+            </div>
+            {loadingAtribuicoes ? (
+              <div style={{ textAlign: "center", padding: 20 }}>
+                <Loader2 size={24} color={T.blue} style={{ animation: "spin 1s linear infinite" }} />
+              </div>
+            ) : atribuicoes.length === 0 ? (
+              <EmptyState icon={FileText} title="Nenhuma atividade enviada" subtitle="As atividades atribuídas aos alunos aparecerão aqui" />
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12 }}>
+                {atribuicoes.map((atv) => (
+                  <Card key={atv.id} style={{ position: "relative", overflow: "hidden" }}>
+                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: `linear-gradient(90deg, ${T.blue}, ${T.blue}88)` }} />
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginTop: 4 }}>
+                      <div style={{ width: 42, height: 42, borderRadius: 12, background: T.blueLight, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <FileText size={20} color={T.blue} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: T.textPrimary, fontFamily: "'Nunito', sans-serif" }}>{atv.titulo}</div>
+                        <div style={{ fontSize: 12, color: T.textSecondary, fontFamily: "'Nunito', sans-serif", marginTop: 2 }}>Aluno: {atv.nomeAluno}</div>
+                        {atv.enunciado && (
+                          <div style={{ fontSize: 12, color: T.textPrimary, fontFamily: "'Nunito', sans-serif", marginTop: 6, padding: "8px 10px", background: T.yellowLight, borderRadius: 8, fontStyle: "italic" }}>
+                            {atv.enunciado}
+                          </div>
+                        )}
+                        <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+                          <Badge color={T.blue}>Enviada em {formatData(atv.dataAtribuicao)}</Badge>
+                        </div>
+                      </div>
+                    </div>
+                    <Btn full variant="ghost" loading={removendoId === atv.id} onClick={() => handleRemoverAtribuicao(atv)}
+                      style={{ fontSize: 13, color: T.red, marginTop: 12 }}>
+                      <Trash2 size={14} /> Remover
+                    </Btn>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
-          <Select
-            label="Atividade"
-            placeholder="Selecione uma atividade"
-            options={banco.map((b) => ({ value: String(b.id), label: b.titulo }))}
-            value={atribuirForm.bancoAtividadeId}
-            onChange={(val) => setAtribuirForm({ ...atribuirForm, bancoAtividadeId: val })}
-          />
-          <Select
-            label="Aluno"
-            placeholder="Selecione o aluno"
-            options={alunos.map((a) => ({ value: String(a.id), label: `${a.nome} — ${a.serie}` }))}
-            value={atribuirForm.alunoId}
-            onChange={(val) => setAtribuirForm({ ...atribuirForm, alunoId: val })}
-          />
-          <Btn loading={atribuindo} onClick={handleAtribuir} full style={{ marginTop: 8 }}>
-            <Send size={16} /> Enviar Atividade
-          </Btn>
-        </Card>
+        </div>
       )}
     </div>
   );

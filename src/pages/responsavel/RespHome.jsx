@@ -14,19 +14,6 @@ import { PdfViewer } from "../../components/ui/PdfViewer";
 
 const DIA_ORDER = ["SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
 
-function diasRestantes(dataAtribuicao) {
-  if (!dataAtribuicao) return null;
-  const atrib = new Date(dataAtribuicao);
-  const diff = Math.floor((Date.now() - atrib.getTime()) / (1000 * 60 * 60 * 24));
-  return Math.max(0, 7 - diff);
-}
-
-function badgeDias(dias) {
-  if (dias >= 5) return T.green;
-  if (dias >= 3) return T.blue;
-  return T.red;
-}
-
 export function RespHome() {
   const { api, user } = useAuth();
   const toast = useToast();
@@ -58,9 +45,10 @@ export function RespHome() {
     ]).then(([a, h]) => {
       setAlunos(a);
       setHorarios(h);
-      // Carregar atividades de cada aluno
       Promise.all(
-        a.map((aluno) => api.listarAtividadesAluno(aluno.id).then((ativs) => ({ alunoId: aluno.id, atividades: ativs })).catch(() => ({ alunoId: aluno.id, atividades: [] })))
+        a.map((aluno) => api.listarAtividadesAluno(aluno.id)
+          .then((ativs) => ({ alunoId: aluno.id, atividades: ativs }))
+          .catch(() => ({ alunoId: aluno.id, atividades: [] })))
       ).then((results) => {
         const map = {};
         results.forEach(({ alunoId, atividades }) => { map[alunoId] = atividades; });
@@ -114,7 +102,7 @@ export function RespHome() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 32 }}>
         <StatCard icon={Baby} label="Filhos matriculados" value={alunos.length} color={T.green} />
         <StatCard icon={Calendar} label="Aulas agendadas" value={horarios.length} color={T.blue} />
-        <StatCard icon={FileText} label="Atividades pendentes" value={totalAtividades} color={T.red} />
+        <StatCard icon={FileText} label="Atividades" value={totalAtividades} color={T.red} />
       </div>
 
       {alunos.length > 0 && (
@@ -126,10 +114,7 @@ export function RespHome() {
             {alunos.map((a) => (
               <Card key={a.id}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: 12, background: T.greenLight,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: T.greenLight, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <GraduationCap size={22} color={T.green} />
                   </div>
                   <div>
@@ -150,10 +135,7 @@ export function RespHome() {
           </h3>
           {DIA_ORDER.filter((d) => grouped[d]).map((dia) => (
             <div key={dia} style={{ marginBottom: 16 }}>
-              <div style={{
-                fontSize: 13, fontWeight: 800, color: T.red, marginBottom: 8,
-                fontFamily: "'Nunito', sans-serif", textTransform: "uppercase", letterSpacing: 1,
-              }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: T.red, marginBottom: 8, fontFamily: "'Nunito', sans-serif", textTransform: "uppercase", letterSpacing: 1 }}>
                 {diaLabel(dia)}
               </div>
               {grouped[dia].map((h, i) => (
@@ -182,46 +164,42 @@ export function RespHome() {
               <FileText size={18} color={T.red} /> Atividades — {a.nome}
             </h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
-              {atividades.map((atv) => {
-                const dias = diasRestantes(atv.dataAtribuicao);
-                return (
-                  <Card key={atv.id} style={{ position: "relative", overflow: "hidden" }}>
-                    <div style={{
-                      position: "absolute", top: 0, left: 0, right: 0, height: 4,
-                      background: `linear-gradient(90deg, ${T.red}, ${T.red}88)`,
-                    }} />
-                    <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginTop: 4 }}>
-                      <div style={{
-                        width: 42, height: 42, borderRadius: 12, background: T.redLight, flexShrink: 0,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                      }}>
-                        <FileText size={20} color={T.red} />
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 800, color: T.textPrimary, fontFamily: "'Nunito', sans-serif" }}>{atv.titulo}</div>
-                        {atv.descricao && (
-                          <div style={{ fontSize: 12, color: T.textSecondary, fontFamily: "'Nunito', sans-serif", marginTop: 2 }}>{atv.descricao}</div>
-                        )}
-                        <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
-                          {dias !== null && (
-                            <Badge color={badgeDias(dias)}>
-                              {dias === 0 ? "Último dia!" : `${dias} dia${dias !== 1 ? "s" : ""} restante${dias !== 1 ? "s" : ""}`}
-                            </Badge>
-                          )}
+              {atividades.map((atv) => (
+                <Card key={atv.id} style={{ position: "relative", overflow: "hidden" }}>
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: `linear-gradient(90deg, ${T.red}, ${T.red}88)` }} />
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginTop: 4 }}>
+                    <div style={{ width: 42, height: 42, borderRadius: 12, background: T.redLight, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <FileText size={20} color={T.red} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: T.textPrimary, fontFamily: "'Nunito', sans-serif" }}>{atv.titulo}</div>
+                      {atv.descricao && (
+                        <div style={{ fontSize: 12, color: T.textSecondary, fontFamily: "'Nunito', sans-serif", marginTop: 2 }}>{atv.descricao}</div>
+                      )}
+                      {atv.enunciado && (
+                        <div style={{ fontSize: 12, color: T.textPrimary, fontFamily: "'Nunito', sans-serif", marginTop: 6, padding: "8px 10px", background: T.yellowLight, borderRadius: 8, fontStyle: "italic" }}>
+                          📝 {atv.enunciado}
                         </div>
+                      )}
+                      <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+                        {atv.dataAtribuicao && (
+                          <Badge color={T.blue}>
+                            Enviada em {new Date(atv.dataAtribuicao).toLocaleDateString("pt-BR")}
+                          </Badge>
+                        )}
                       </div>
                     </div>
-                    <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                      <Btn full variant="ghost" onClick={() => handleVisualizar(atv)} style={{ fontSize: 13, color: T.blue }}>
-                        <Eye size={14} /> Ver
-                      </Btn>
-                      <Btn full variant="ghost" loading={downloadingId === atv.id} onClick={() => handleDownload(atv)} style={{ fontSize: 13 }}>
-                        <Download size={14} /> Baixar
-                      </Btn>
-                    </div>
-                  </Card>
-                );
-              })}
+                  </div>
+                  <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                    <Btn full variant="ghost" onClick={() => handleVisualizar(atv)} style={{ fontSize: 13, color: T.blue }}>
+                      <Eye size={14} /> Ver
+                    </Btn>
+                    <Btn full variant="ghost" loading={downloadingId === atv.id} onClick={() => handleDownload(atv)} style={{ fontSize: 13 }}>
+                      <Download size={14} /> Baixar
+                    </Btn>
+                  </div>
+                </Card>
+              ))}
             </div>
           </div>
         );
