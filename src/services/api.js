@@ -33,6 +33,10 @@ export function createApi(getToken) {
     buscarHorariosPorResponsavel: (id) => req("GET", `/horario/responsavel/${id}`),
     listarUsuariosDisponiveis: () => req("GET", "/responsavel/usuarios-disponiveis"),
     atualizarSenha: (dto) => req("PUT", "/autenticacao/senha", dto),
+    listarUsuariosParaSenha: () => req("GET", "/autenticacao/usuarios-para-senha"),
+    listarTodosUsuarios: () => req("GET", "/autenticacao/usuarios"),
+    editarUsuario: (id, dto) => req("PUT", `/autenticacao/usuarios/${id}`, dto),
+    alterarStatusUsuario: (id, ativo) => req("PATCH", `/autenticacao/usuarios/${id}/status`, { ativo }),
     listarTodosAlunos: () => req("GET", "/aluno"),
   };
 }

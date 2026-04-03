@@ -8,6 +8,7 @@ export const ADM_MENU = [
   { id: "cadastrar-horario", label: "Novo Horário", icon: Clock },
   { id: "listar-responsaveis", label: "Responsáveis", icon: ClipboardList },
   { id: "listar-horarios", label: "Todos Horários", icon: Calendar },
+  { id: "listar-usuarios", label: "Usuários", icon: Users },
   { id: "atualizar-senha", label: "Atualizar Senha", icon: KeyRound },
 ];
 

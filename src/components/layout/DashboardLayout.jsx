@@ -13,6 +13,7 @@ import { ListarResponsaveis } from "../../pages/adm/ListarResponsaveis";
 import { VerAlunos } from "../../pages/adm/VerAlunos";
 import { ListarHorarios } from "../../pages/adm/ListarHorarios";
 import { AtualizarSenha } from "../../pages/adm/AtualizarSenha";
+import { ListarUsuarios } from "../../pages/adm/ListarUsuarios";
 import { ProfHome } from "../../pages/professora/ProfHome";
 import { ProfResponsaveis } from "../../pages/professora/ProfResponsaveis";
 import { ProfTodosAlunos } from "../../pages/professora/ProfTodosAlunos";
@@ -29,6 +30,7 @@ function renderAdmPage(page, pageParams, navigate) {
     case "listar-responsaveis": return <ListarResponsaveis onNavigate={navigate} />;
     case "ver-alunos": return <VerAlunos params={pageParams} onNavigate={navigate} />;
     case "listar-horarios": return <ListarHorarios />;
+    case "listar-usuarios": return <ListarUsuarios />;
     case "atualizar-senha": return <AtualizarSenha />;
     default: return <AdmHome onNavigate={navigate} />;
   }
