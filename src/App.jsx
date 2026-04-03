@@ -1,6 +1,6 @@
 /*
  * ═══════════════════════════════════════════════════════════
- *  ESPAÇO KIDS — Tia Dalquí · Reforço Escolar
+ *  ESPAÇO KIDS — Tia Dalqui · Reforço Escolar
  *  Frontend React SPA
  * ═══════════════════════════════════════════════════════════
  *
@@ -360,7 +360,7 @@ function Logo({ size = "md" }) {
         </div>
       </div>
       <div>
-        <div style={{ fontSize: 11 * s, fontWeight: 700, color: T.blue, letterSpacing: 1, fontFamily: "'Nunito', sans-serif", lineHeight: 1 }}>Tia Dalquí</div>
+        <div style={{ fontSize: 11 * s, fontWeight: 700, color: T.blue, letterSpacing: 1, fontFamily: "'Nunito', sans-serif", lineHeight: 1 }}>Tia Dalqui</div>
         <div style={{ fontSize: 18 * s, fontWeight: 900, color: T.red, lineHeight: 1.1, fontFamily: "'Nunito', sans-serif" }}>Espaço Kids</div>
       </div>
     </div>
@@ -1333,7 +1333,7 @@ function DashboardLayout() {
             <Menu size={24} color={T.textPrimary} />
           </button>
           <div style={{ fontSize: 13, color: T.textSecondary, fontWeight: 600, fontFamily: "'Nunito', sans-serif" }}>
-            Reforço Escolar — Tia Dalquí
+            Reforço Escolar — Tia Dalqui
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{
@@ -1356,7 +1356,7 @@ function DashboardLayout() {
           fontSize: 12, color: T.textSecondary, fontFamily: "'Nunito', sans-serif", fontWeight: 600,
           flexWrap: "wrap", gap: 8,
         }}>
-          <span>Espaço Kids — Tia Dalquí · Reforço Escolar</span>
+          <span>Espaço Kids — Tia Dalqui · Reforço Escolar</span>
           <div style={{ display: "flex", gap: 16 }}>
             <a href="https://www.instagram.com/tia_dalqui/" target="_blank" rel="noopener"
               style={{ color: T.red, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
