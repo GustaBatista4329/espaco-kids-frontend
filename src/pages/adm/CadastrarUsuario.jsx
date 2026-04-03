@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Users, Eye, UserPlus, Pencil } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
+import { addPendingResponsavel } from "../../utils/pendingResponsaveis";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { Select } from "../../components/ui/Select";
@@ -23,7 +24,10 @@ export function CadastrarUsuario() {
     if (!form.nome || !form.login || !form.senha || !form.perfil) { toast("Preencha todos os campos", "error"); return; }
     setLoading(true);
     try {
-      await api.cadastrarUsuario(form);
+      const result = await api.cadastrarUsuario(form);
+      if (form.perfil === "RESPONSAVEL" && result?.id) {
+        addPendingResponsavel({ id: result.id, nome: form.nome, login: form.login });
+      }
       toast("Usuário criado com sucesso!");
       setForm({ nome: "", login: "", senha: "", perfil: "" });
     } catch (e) { toast(e.message, "error"); }

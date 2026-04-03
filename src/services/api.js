@@ -31,5 +31,6 @@ export function createApi(getToken) {
     buscarTodosHorarios: () => req("GET", "/horario/todos"),
     buscarHorariosPorAluno: (id) => req("GET", `/horario/aluno/${id}`),
     buscarHorariosPorResponsavel: (id) => req("GET", `/horario/responsavel/${id}`),
+    listarUsuariosDisponiveis: () => req("GET", "/responsavel/usuarios-disponiveis"),
   };
 }
