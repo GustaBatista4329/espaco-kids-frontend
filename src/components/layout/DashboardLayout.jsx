@@ -12,7 +12,11 @@ import { CadastrarHorario } from "../../pages/adm/CadastrarHorario";
 import { ListarResponsaveis } from "../../pages/adm/ListarResponsaveis";
 import { VerAlunos } from "../../pages/adm/VerAlunos";
 import { ListarHorarios } from "../../pages/adm/ListarHorarios";
+import { AtualizarSenha } from "../../pages/adm/AtualizarSenha";
 import { ProfHome } from "../../pages/professora/ProfHome";
+import { ProfResponsaveis } from "../../pages/professora/ProfResponsaveis";
+import { ProfTodosAlunos } from "../../pages/professora/ProfTodosAlunos";
+import { ProfVerAlunos } from "../../pages/professora/ProfVerAlunos";
 import { RespHome } from "../../pages/responsavel/RespHome";
 
 function renderAdmPage(page, pageParams, navigate) {
@@ -25,7 +29,18 @@ function renderAdmPage(page, pageParams, navigate) {
     case "listar-responsaveis": return <ListarResponsaveis onNavigate={navigate} />;
     case "ver-alunos": return <VerAlunos params={pageParams} onNavigate={navigate} />;
     case "listar-horarios": return <ListarHorarios />;
+    case "atualizar-senha": return <AtualizarSenha />;
     default: return <AdmHome onNavigate={navigate} />;
+  }
+}
+
+function renderProfPage(page, pageParams, navigate) {
+  switch (page) {
+    case "home": return <ProfHome />;
+    case "responsaveis": return <ProfResponsaveis onNavigate={navigate} />;
+    case "alunos": return <ProfTodosAlunos />;
+    case "prof-ver-alunos": return <ProfVerAlunos params={pageParams} onNavigate={navigate} />;
+    default: return <ProfHome />;
   }
 }
 
@@ -45,7 +60,7 @@ export function DashboardLayout() {
 
   function renderPage() {
     if (user?.perfil === "ADM") return renderAdmPage(page, pageParams, navigate);
-    if (user?.perfil === "PROFESSORA") return <ProfHome />;
+    if (user?.perfil === "PROFESSORA") return renderProfPage(page, pageParams, navigate);
     if (user?.perfil === "RESPONSAVEL") return <RespHome />;
     return <div style={{ fontFamily: "'Nunito', sans-serif" }}>Perfil não reconhecido.</div>;
   }

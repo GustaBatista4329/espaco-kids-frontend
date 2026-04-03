@@ -32,5 +32,7 @@ export function createApi(getToken) {
     buscarHorariosPorAluno: (id) => req("GET", `/horario/aluno/${id}`),
     buscarHorariosPorResponsavel: (id) => req("GET", `/horario/responsavel/${id}`),
     listarUsuariosDisponiveis: () => req("GET", "/responsavel/usuarios-disponiveis"),
+    atualizarSenha: (dto) => req("PUT", "/autenticacao/senha", dto),
+    listarTodosAlunos: () => req("GET", "/aluno"),
   };
 }
