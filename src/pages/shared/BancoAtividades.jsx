@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { FileText, Upload, Trash2, Download, Send, Loader2, Eye, GraduationCap } from "lucide-react";
 import { T } from "../../constants/theme";
+import { CATEGORIAS, categoriaLabel, categoriaColor } from "../../constants/categorias";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 import { Card } from "../../components/ui/Card";
@@ -27,7 +28,7 @@ export function BancoAtividades({ onNavigate }) {
   const [loadingBanco, setLoadingBanco] = useState(true);
   const [alunos, setAlunos] = useState([]);
 
-  const [uploadForm, setUploadForm] = useState({ titulo: "", descricao: "", arquivo: null });
+  const [uploadForm, setUploadForm] = useState({ titulo: "", descricao: "", categoria: "", arquivo: null });
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -101,13 +102,14 @@ export function BancoAtividades({ onNavigate }) {
 
   async function handleUpload() {
     if (!uploadForm.titulo) { toast("Informe o título", "error"); return; }
+    if (!uploadForm.categoria) { toast("Selecione uma categoria", "error"); return; }
     if (!uploadForm.arquivo) { toast("Selecione um arquivo PDF", "error"); return; }
     setUploading(true);
     try {
-      const novo = await api.uploadAtividade(uploadForm.titulo, uploadForm.descricao, uploadForm.arquivo);
+      const novo = await api.uploadAtividade(uploadForm.titulo, uploadForm.descricao, uploadForm.categoria, uploadForm.arquivo);
       if (novo) setBanco((prev) => [novo, ...prev]);
       toast("Atividade enviada com sucesso!");
-      setUploadForm({ titulo: "", descricao: "", arquivo: null });
+      setUploadForm({ titulo: "", descricao: "", categoria: "", arquivo: null });
       if (fileRef.current) fileRef.current.value = "";
     } catch (e) { toast(e.message, "error"); }
     setUploading(false);
@@ -159,6 +161,19 @@ export function BancoAtividades({ onNavigate }) {
       toast("Atribuição removida!");
     } catch (e) { toast(e.message, "error"); }
     setRemovendoId(null);
+  }
+
+  function agruparPorCategoria(lista) {
+    const grupos = {};
+    lista.forEach((item) => {
+      const key = item.categoria || "outros";
+      if (!grupos[key]) grupos[key] = [];
+      grupos[key].push(item);
+    });
+    // Order by CATEGORIAS order
+    return CATEGORIAS
+      .filter((c) => grupos[c.value])
+      .map((c) => ({ categoria: c.value, label: c.label, color: c.color, itens: grupos[c.value] }));
   }
 
   function agruparPorAluno(lista) {
@@ -215,6 +230,13 @@ export function BancoAtividades({ onNavigate }) {
               onChange={(e) => setUploadForm({ ...uploadForm, titulo: e.target.value })} />
             <Input label="Descrição (opcional)" placeholder="Breve descrição da atividade" value={uploadForm.descricao}
               onChange={(e) => setUploadForm({ ...uploadForm, descricao: e.target.value })} />
+            <Select
+              label="Categoria"
+              placeholder="Selecione uma categoria"
+              options={CATEGORIAS.map((c) => ({ value: c.value, label: c.label }))}
+              value={uploadForm.categoria}
+              onChange={(val) => setUploadForm({ ...uploadForm, categoria: val })}
+            />
 
             <div style={{ marginBottom: 16 }}>
               <label style={{ fontSize: 13, fontWeight: 700, color: T.textSecondary, marginBottom: 6, display: "block", fontFamily: "'Nunito', sans-serif" }}>
@@ -265,41 +287,57 @@ export function BancoAtividades({ onNavigate }) {
           ) : banco.length === 0 ? (
             <EmptyState icon={FileText} title="Banco vazio" subtitle="Envie o primeiro PDF para começar" />
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
-              {banco.map((item) => (
-                <Card key={item.id} style={{ position: "relative", overflow: "hidden" }}>
-                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: `linear-gradient(90deg, ${T.red}, ${T.red}88)` }} />
-                  <div onClick={() => handleVisualizar(item)} style={{ display: "flex", alignItems: "flex-start", gap: 14, marginTop: 4, cursor: "pointer" }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: T.redLight, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <FileText size={22} color={T.red} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: T.textPrimary, fontFamily: "'Nunito', sans-serif" }}>{item.titulo}</div>
-                      {item.descricao && (
-                        <div style={{ fontSize: 12, color: T.textSecondary, fontFamily: "'Nunito', sans-serif", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                          {item.descricao}
+            agruparPorCategoria(banco).map((grupo) => (
+              <div key={grupo.categoria} style={{ marginBottom: 32 }}>
+                <div style={{
+                  fontSize: 14, fontWeight: 900, color: grupo.color,
+                  fontFamily: "'Nunito', sans-serif", textTransform: "uppercase",
+                  letterSpacing: 1, marginBottom: 12,
+                  paddingBottom: 8, borderBottom: `3px solid ${grupo.color}33`,
+                  display: "flex", alignItems: "center", gap: 8,
+                }}>
+                  <FileText size={16} /> {grupo.label}
+                  <span style={{ fontSize: 12, fontWeight: 700, color: T.textSecondary, textTransform: "none", letterSpacing: 0, marginLeft: 4 }}>
+                    ({grupo.itens.length})
+                  </span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
+                  {grupo.itens.map((item) => (
+                    <Card key={item.id} style={{ position: "relative", overflow: "hidden" }}>
+                      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: `linear-gradient(90deg, ${grupo.color}, ${grupo.color}88)` }} />
+                      <div onClick={() => handleVisualizar(item)} style={{ display: "flex", alignItems: "flex-start", gap: 14, marginTop: 4, cursor: "pointer" }}>
+                        <div style={{ width: 44, height: 44, borderRadius: 12, background: `${grupo.color}18`, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <FileText size={22} color={grupo.color} />
                         </div>
-                      )}
-                      <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
-                        <Badge color={T.red}>PDF</Badge>
-                        {item.criadoEm && <Badge color={T.warmGray}>Adicionado em {formatData(item.criadoEm)}</Badge>}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 800, color: T.textPrimary, fontFamily: "'Nunito', sans-serif" }}>{item.titulo}</div>
+                          {item.descricao && (
+                            <div style={{ fontSize: 12, color: T.textSecondary, fontFamily: "'Nunito', sans-serif", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {item.descricao}
+                            </div>
+                          )}
+                          <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+                            <Badge color={grupo.color}>{grupo.label}</Badge>
+                            {item.criadoEm && <Badge color={T.warmGray}>Adicionado em {formatData(item.criadoEm)}</Badge>}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-                    <Btn full variant="ghost" onClick={() => handleVisualizar(item)} style={{ fontSize: 13, color: T.blue }}>
-                      <Eye size={14} /> Ver
-                    </Btn>
-                    <Btn full variant="ghost" loading={downloadingId === item.id} onClick={() => handleDownload(item)} style={{ fontSize: 13 }}>
-                      <Download size={14} /> Baixar
-                    </Btn>
-                    <Btn full variant="ghost" loading={deletingId === item.id} onClick={() => handleDelete(item)} style={{ fontSize: 13, color: T.red }}>
-                      <Trash2 size={14} /> Excluir
-                    </Btn>
-                  </div>
-                </Card>
-              ))}
-            </div>
+                      <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+                        <Btn full variant="ghost" onClick={() => handleVisualizar(item)} style={{ fontSize: 13, color: T.blue }}>
+                          <Eye size={14} /> Ver
+                        </Btn>
+                        <Btn full variant="ghost" loading={downloadingId === item.id} onClick={() => handleDownload(item)} style={{ fontSize: 13 }}>
+                          <Download size={14} /> Baixar
+                        </Btn>
+                        <Btn full variant="ghost" loading={deletingId === item.id} onClick={() => handleDelete(item)} style={{ fontSize: 13, color: T.red }}>
+                          <Trash2 size={14} /> Excluir
+                        </Btn>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            ))
           )}
         </div>
       )}
@@ -314,7 +352,7 @@ export function BancoAtividades({ onNavigate }) {
             <Select
               label="Atividade"
               placeholder="Selecione uma atividade"
-              options={banco.map((b) => ({ value: String(b.id), label: b.titulo }))}
+              options={banco.map((b) => ({ value: String(b.id), label: b.categoria ? `[${categoriaLabel(b.categoria)}] ${b.titulo}` : b.titulo }))}
               value={atribuirForm.bancoAtividadeId}
               onChange={(val) => setAtribuirForm({ ...atribuirForm, bancoAtividadeId: val })}
             />

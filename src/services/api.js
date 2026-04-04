@@ -41,10 +41,11 @@ export function createApi(getToken, onUnauthorized) {
     editarUsuario: (id, dto) => req("PUT", `/autenticacao/usuarios/${id}`, dto),
     alterarStatusUsuario: (id, ativo) => req("PATCH", `/autenticacao/usuarios/${id}/status`, { ativo }),
     listarTodosAlunos: () => req("GET", "/aluno"),
-    uploadAtividade: (titulo, descricao, arquivo) => {
+    uploadAtividade: (titulo, descricao, categoria, arquivo) => {
       const formData = new FormData();
       formData.append("titulo", titulo);
       formData.append("descricao", descricao || "");
+      formData.append("categoria", categoria || "");
       formData.append("arquivo", arquivo);
       const token = getToken();
       return fetch(`${API_BASE}/atividade/upload`, {
