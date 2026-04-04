@@ -15,11 +15,13 @@ import { ListarHorarios } from "../../pages/adm/ListarHorarios";
 import { AtualizarSenha } from "../../pages/adm/AtualizarSenha";
 import { ListarUsuarios } from "../../pages/adm/ListarUsuarios";
 import { BancoAtividades } from "../../pages/shared/BancoAtividades";
+import { AtividadesAluno } from "../../pages/shared/AtividadesAluno";
 import { ProfHome } from "../../pages/professora/ProfHome";
 import { ProfResponsaveis } from "../../pages/professora/ProfResponsaveis";
 import { ProfTodosAlunos } from "../../pages/professora/ProfTodosAlunos";
 import { ProfVerAlunos } from "../../pages/professora/ProfVerAlunos";
 import { RespHome } from "../../pages/responsavel/RespHome";
+import { RespAtividades } from "../../pages/responsavel/RespAtividades";
 
 function renderAdmPage(page, pageParams, navigate) {
   switch (page) {
@@ -32,7 +34,8 @@ function renderAdmPage(page, pageParams, navigate) {
     case "ver-alunos": return <VerAlunos params={pageParams} onNavigate={navigate} />;
     case "listar-horarios": return <ListarHorarios />;
     case "listar-usuarios": return <ListarUsuarios />;
-    case "banco-atividades": return <BancoAtividades />;
+    case "banco-atividades": return <BancoAtividades onNavigate={navigate} />;
+    case "ver-atividades-aluno": return <AtividadesAluno params={pageParams} onNavigate={navigate} podeExcluir={true} />;
     case "atualizar-senha": return <AtualizarSenha />;
     default: return <AdmHome onNavigate={navigate} />;
   }
@@ -42,9 +45,10 @@ function renderProfPage(page, pageParams, navigate) {
   switch (page) {
     case "home": return <ProfHome />;
     case "responsaveis": return <ProfResponsaveis onNavigate={navigate} />;
-    case "alunos": return <ProfTodosAlunos />;
+    case "alunos": return <ProfTodosAlunos onNavigate={navigate} />;
     case "prof-ver-alunos": return <ProfVerAlunos params={pageParams} onNavigate={navigate} />;
-    case "banco-atividades": return <BancoAtividades />;
+    case "banco-atividades": return <BancoAtividades onNavigate={navigate} />;
+    case "ver-atividades-aluno": return <AtividadesAluno params={pageParams} onNavigate={navigate} podeExcluir={true} />;
     default: return <ProfHome />;
   }
 }
@@ -63,16 +67,32 @@ export function DashboardLayout() {
 
   const menu = user?.perfil === "ADM" ? ADM_MENU : user?.perfil === "PROFESSORA" ? PROF_MENU : RESP_MENU;
 
+  // Mapeia sub-páginas para o item de menu pai correspondente
+  function getActiveMenuItem() {
+    if (user?.perfil === "RESPONSAVEL" && page === "ver-atividades-aluno") return "atividades";
+    if (user?.perfil === "ADM" && page === "ver-alunos") return "listar-responsaveis";
+    if (user?.perfil === "ADM" && page === "ver-atividades-aluno") return "banco-atividades";
+    if (user?.perfil === "PROFESSORA" && page === "prof-ver-alunos") return "responsaveis";
+    if (user?.perfil === "PROFESSORA" && page === "ver-atividades-aluno") return "banco-atividades";
+    return page;
+  }
+
   function renderPage() {
     if (user?.perfil === "ADM") return renderAdmPage(page, pageParams, navigate);
     if (user?.perfil === "PROFESSORA") return renderProfPage(page, pageParams, navigate);
-    if (user?.perfil === "RESPONSAVEL") return <RespHome />;
+    if (user?.perfil === "RESPONSAVEL") {
+      switch (page) {
+        case "atividades": return <RespAtividades onNavigate={navigate} />;
+        case "ver-atividades-aluno": return <AtividadesAluno params={pageParams} onNavigate={navigate} podeExcluir={false} />;
+        default: return <RespHome onNavigate={navigate} />;
+      }
+    }
     return <div style={{ fontFamily: "'Nunito', sans-serif" }}>Perfil não reconhecido.</div>;
   }
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: T.cream, fontFamily: "'Nunito', sans-serif" }}>
-      <Sidebar items={menu} active={page} onNavigate={navigate} onLogout={logout}
+      <Sidebar items={menu} active={getActiveMenuItem()} onNavigate={navigate} onLogout={logout}
         user={user} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main style={{ flex: 1, marginLeft: 272, minHeight: "100vh" }}>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Baby, GraduationCap, Loader2 } from "lucide-react";
+import { Baby, GraduationCap, Loader2, FileText } from "lucide-react";
 import { T } from "../../constants/theme";
 import { useAuth } from "../../contexts/AuthContext";
 import { Card } from "../../components/ui/Card";
@@ -51,6 +51,10 @@ export function VerAlunos({ params, onNavigate }) {
                   </div>
                 </div>
               </div>
+              <Btn variant="ghost" onClick={() => onNavigate("ver-atividades-aluno", { alunoId: a.id, nomeAluno: a.nome, voltarPara: "ver-alunos" })}
+                style={{ marginTop: 10, fontSize: 12, padding: "4px 10px" }}>
+                <FileText size={14} /> Atividades
+              </Btn>
             </Card>
           ))}
         </div>

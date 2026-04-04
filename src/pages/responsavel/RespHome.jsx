@@ -14,7 +14,7 @@ import { PdfViewer } from "../../components/ui/PdfViewer";
 
 const DIA_ORDER = ["SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
 
-export function RespHome() {
+export function RespHome({ onNavigate }) {
   const { api, user } = useAuth();
   const toast = useToast();
   const rid = user?.responsavelId;
@@ -160,9 +160,17 @@ export function RespHome() {
         if (atividades.length === 0) return null;
         return (
           <div key={a.id} style={{ marginTop: 28 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 800, color: T.textPrimary, marginBottom: 12, fontFamily: "'Nunito', sans-serif", display: "flex", alignItems: "center", gap: 8 }}>
-              <FileText size={18} color={T.red} /> Atividades — {a.nome}
-            </h3>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, flexWrap: "wrap", gap: 8 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 800, color: T.textPrimary, margin: 0, fontFamily: "'Nunito', sans-serif", display: "flex", alignItems: "center", gap: 8 }}>
+                <FileText size={18} color={T.red} /> Atividades — {a.nome}
+              </h3>
+              {onNavigate && (
+                <Btn variant="ghost" onClick={() => onNavigate("ver-atividades-aluno", { alunoId: a.id, nomeAluno: a.nome, voltarPara: "home" })}
+                  style={{ fontSize: 12, padding: "4px 10px" }}>
+                  Ver todas as atividades →
+                </Btn>
+              )}
+            </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
               {atividades.map((atv) => (
                 <Card key={atv.id} style={{ position: "relative", overflow: "hidden" }}>

@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
-import { GraduationCap, Search, Loader2 } from "lucide-react";
+import { GraduationCap, Search, Loader2, FileText } from "lucide-react";
 import { T } from "../../constants/theme";
 import { useAuth } from "../../contexts/AuthContext";
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
+import { Btn } from "../../components/ui/Btn";
 import { Input } from "../../components/ui/Input";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { PageHeader } from "../../components/layout/PageHeader";
 
-export function ProfTodosAlunos() {
+export function ProfTodosAlunos({ onNavigate }) {
   const { api } = useAuth();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +57,12 @@ export function ProfTodosAlunos() {
                   </div>
                 </div>
               </div>
+              {onNavigate && (
+                <Btn variant="ghost" onClick={() => onNavigate("ver-atividades-aluno", { alunoId: a.id, nomeAluno: a.nome, voltarPara: "alunos" })}
+                  style={{ marginTop: 10, fontSize: 12, padding: "4px 10px" }}>
+                  <FileText size={14} /> Atividades
+                </Btn>
+              )}
             </Card>
           ))}
         </div>

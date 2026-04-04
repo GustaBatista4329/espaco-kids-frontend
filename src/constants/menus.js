@@ -15,6 +15,7 @@ export const ADM_MENU = [
 
 export const RESP_MENU = [
   { id: "home", label: "Meus Filhos", icon: Home },
+  { id: "atividades", label: "Atividades", icon: FileText },
 ];
 
 export const PROF_MENU = [

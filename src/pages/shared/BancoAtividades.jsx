@@ -17,7 +17,7 @@ const TABS = [
   { id: "atribuir", label: "Enviar para Aluno", icon: Send },
 ];
 
-export function BancoAtividades() {
+export function BancoAtividades({ onNavigate }) {
   const { api } = useAuth();
   const toast = useToast();
   const fileRef = useRef(null);
@@ -48,7 +48,7 @@ export function BancoAtividades() {
     Promise.all(
       listaAlunos.map((a) =>
         api.listarAtividadesAluno(a.id)
-          .then((ativs) => ativs.map((atv) => ({ ...atv, nomeAluno: a.nome })))
+          .then((ativs) => ativs.map((atv) => ({ ...atv, nomeAluno: a.nome, alunoId: a.id })))
           .catch(() => [])
       )
     ).then((results) => {
@@ -371,10 +371,18 @@ export function BancoAtividades() {
                         </div>
                       </div>
                     </div>
-                    <Btn full variant="ghost" loading={removendoId === atv.id} onClick={() => handleRemoverAtribuicao(atv)}
-                      style={{ fontSize: 13, color: T.red, marginTop: 12 }}>
-                      <Trash2 size={14} /> Remover
-                    </Btn>
+                    <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                      {onNavigate && (
+                        <Btn full variant="ghost" onClick={() => onNavigate("ver-atividades-aluno", { alunoId: atv.alunoId, nomeAluno: atv.nomeAluno, voltarPara: "banco-atividades" })}
+                          style={{ fontSize: 13, color: T.blue }}>
+                          <Eye size={14} /> Ver Todas
+                        </Btn>
+                      )}
+                      <Btn full variant="ghost" loading={removendoId === atv.id} onClick={() => handleRemoverAtribuicao(atv)}
+                        style={{ fontSize: 13, color: T.red }}>
+                        <Trash2 size={14} /> Remover
+                      </Btn>
+                    </div>
                   </Card>
                 ))}
               </div>
