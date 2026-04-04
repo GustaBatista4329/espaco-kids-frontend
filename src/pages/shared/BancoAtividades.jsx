@@ -166,7 +166,7 @@ export function BancoAtividades({ onNavigate }) {
   function agruparPorCategoria(lista) {
     const grupos = {};
     lista.forEach((item) => {
-      const key = item.categoria || "outros";
+      const key = item.categoria || "GERAL";
       if (!grupos[key]) grupos[key] = [];
       grupos[key].push(item);
     });
