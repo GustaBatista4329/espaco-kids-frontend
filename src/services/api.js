@@ -1,6 +1,6 @@
 const API_BASE = "http://localhost:8080";
 
-export function createApi(getToken) {
+export function createApi(getToken, onUnauthorized) {
   async function req(method, path, body) {
     const token = getToken();
     const headers = { "Content-Type": "application/json" };
@@ -8,7 +8,10 @@ export function createApi(getToken) {
     const opts = { method, headers };
     if (body) opts.body = JSON.stringify(body);
     const res = await fetch(`${API_BASE}${path}`, opts);
-    if (res.status === 401) throw new Error("TOKEN_EXPIRED");
+    if (res.status === 401) {
+      if (onUnauthorized) onUnauthorized();
+      throw new Error("TOKEN_EXPIRED");
+    }
     if (res.status === 403) throw new Error("FORBIDDEN");
     if (res.status === 201 && res.headers.get("content-length") === "0") return null;
     if (!res.ok) {
@@ -49,7 +52,10 @@ export function createApi(getToken) {
         headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: formData,
       }).then(async (res) => {
-        if (res.status === 401) throw new Error("TOKEN_EXPIRED");
+        if (res.status === 401) {
+          if (onUnauthorized) onUnauthorized();
+          throw new Error("TOKEN_EXPIRED");
+        }
         if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.mensagem || `Erro ${res.status}`); }
         const text = await res.text();
         return text ? JSON.parse(text) : null;
@@ -65,6 +71,10 @@ export function createApi(getToken) {
       return fetch(`${API_BASE}/atividade/download/${encodeURIComponent(nomeArquivo)}`, {
         headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       }).then(async (res) => {
+        if (res.status === 401) {
+          if (onUnauthorized) onUnauthorized();
+          throw new Error("TOKEN_EXPIRED");
+        }
         if (!res.ok) throw new Error("Erro ao carregar arquivo");
         const blob = await res.blob();
         return window.URL.createObjectURL(blob);

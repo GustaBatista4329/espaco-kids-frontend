@@ -18,19 +18,20 @@ export function AuthProvider({ children }) {
   });
 
   const getToken = useCallback(() => token, [token]);
-  const api = useCallback(() => createApi(getToken), [getToken])();
+
+  const logout = useCallback(() => {
+    sessionStorage.removeItem("ek_token");
+    setToken(null);
+    setUser(null);
+  }, []);
+
+  const api = useCallback(() => createApi(getToken, logout), [getToken, logout])();
 
   function login(tk) {
     sessionStorage.setItem("ek_token", tk);
     setToken(tk);
     const d = decodeJwt(tk);
     if (d) setUser({ login: d.sub, perfil: d.perfil, userId: d.userId, responsavelId: d.responsavelId });
-  }
-
-  function logout() {
-    sessionStorage.removeItem("ek_token");
-    setToken(null);
-    setUser(null);
   }
 
   return (
