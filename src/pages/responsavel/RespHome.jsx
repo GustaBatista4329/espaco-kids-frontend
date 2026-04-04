@@ -185,8 +185,19 @@ export function RespHome({ onNavigate }) {
                         <div style={{ fontSize: 12, color: T.textSecondary, fontFamily: "'Nunito', sans-serif", marginTop: 2 }}>{atv.descricao}</div>
                       )}
                       {atv.enunciado && (
-                        <div style={{ fontSize: 12, color: T.textPrimary, fontFamily: "'Nunito', sans-serif", marginTop: 6, padding: "8px 10px", background: T.yellowLight, borderRadius: 8, fontStyle: "italic" }}>
-                          📝 {atv.enunciado}
+                        <div style={{
+                          marginTop: 8,
+                          padding: "10px 14px",
+                          background: `linear-gradient(135deg, ${T.blue}12, ${T.red}08)`,
+                          borderRadius: 10,
+                          borderLeft: `4px solid ${T.red}`,
+                        }}>
+                          <div style={{ fontSize: 10, fontWeight: 900, color: T.red, fontFamily: "'Nunito', sans-serif", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 }}>
+                            📝 Enunciado da Professora
+                          </div>
+                          <div style={{ fontSize: 13, color: T.textPrimary, fontFamily: "'Nunito', sans-serif", fontWeight: 700, lineHeight: 1.5 }}>
+                            {atv.enunciado}
+                          </div>
                         </div>
                       )}
                       <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>

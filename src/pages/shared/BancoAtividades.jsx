@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { FileText, Upload, Trash2, Download, Send, Loader2, Eye } from "lucide-react";
+import { FileText, Upload, Trash2, Download, Send, Loader2, Eye, GraduationCap } from "lucide-react";
 import { T } from "../../constants/theme";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
@@ -159,6 +159,16 @@ export function BancoAtividades({ onNavigate }) {
       toast("Atribuição removida!");
     } catch (e) { toast(e.message, "error"); }
     setRemovendoId(null);
+  }
+
+  function agruparPorAluno(lista) {
+    const grupos = {};
+    lista.forEach((atv) => {
+      const key = atv.alunoId;
+      if (!grupos[key]) grupos[key] = { nomeAluno: atv.nomeAluno, alunoId: atv.alunoId, atividades: [] };
+      grupos[key].atividades.push(atv);
+    });
+    return Object.values(grupos).sort((a, b) => a.nomeAluno.localeCompare(b.nomeAluno));
   }
 
   function formatData(str) {
@@ -350,42 +360,56 @@ export function BancoAtividades({ onNavigate }) {
             ) : atribuicoes.length === 0 ? (
               <EmptyState icon={FileText} title="Nenhuma atividade enviada" subtitle="As atividades atribuídas aos alunos aparecerão aqui" />
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12 }}>
-                {atribuicoes.map((atv) => (
-                  <Card key={atv.id} style={{ position: "relative", overflow: "hidden" }}>
-                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: `linear-gradient(90deg, ${T.blue}, ${T.blue}88)` }} />
-                    <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginTop: 4 }}>
-                      <div style={{ width: 42, height: 42, borderRadius: 12, background: T.blueLight, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <FileText size={20} color={T.blue} />
+              agruparPorAluno(atribuicoes).map((grupo) => (
+                <div key={grupo.alunoId} style={{ marginBottom: 32 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, paddingBottom: 10, borderBottom: `3px solid ${T.blue}22` }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 38, height: 38, borderRadius: 10, background: T.blueLight, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <GraduationCap size={20} color={T.blue} />
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 800, color: T.textPrimary, fontFamily: "'Nunito', sans-serif" }}>{atv.titulo}</div>
-                        <div style={{ fontSize: 12, color: T.textSecondary, fontFamily: "'Nunito', sans-serif", marginTop: 2 }}>Aluno: {atv.nomeAluno}</div>
-                        {atv.enunciado && (
-                          <div style={{ fontSize: 12, color: T.textPrimary, fontFamily: "'Nunito', sans-serif", marginTop: 6, padding: "8px 10px", background: T.yellowLight, borderRadius: 8, fontStyle: "italic" }}>
-                            {atv.enunciado}
-                          </div>
-                        )}
-                        <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
-                          <Badge color={T.blue}>Enviada em {formatData(atv.dataAtribuicao)}</Badge>
+                      <div>
+                        <div style={{ fontSize: 16, fontWeight: 900, color: T.textPrimary, fontFamily: "'Nunito', sans-serif" }}>{grupo.nomeAluno}</div>
+                        <div style={{ fontSize: 12, color: T.textSecondary, fontFamily: "'Nunito', sans-serif", fontWeight: 600 }}>
+                          {grupo.atividades.length} atividade{grupo.atividades.length !== 1 ? "s" : ""}
                         </div>
                       </div>
                     </div>
-                    <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                      {onNavigate && (
-                        <Btn full variant="ghost" onClick={() => onNavigate("ver-atividades-aluno", { alunoId: atv.alunoId, nomeAluno: atv.nomeAluno, voltarPara: "banco-atividades" })}
-                          style={{ fontSize: 13, color: T.blue }}>
-                          <Eye size={14} /> Ver Todas
-                        </Btn>
-                      )}
-                      <Btn full variant="ghost" loading={removendoId === atv.id} onClick={() => handleRemoverAtribuicao(atv)}
-                        style={{ fontSize: 13, color: T.red }}>
-                        <Trash2 size={14} /> Remover
+                    {onNavigate && (
+                      <Btn variant="ghost" onClick={() => onNavigate("ver-atividades-aluno", { alunoId: grupo.alunoId, nomeAluno: grupo.nomeAluno, voltarPara: "banco-atividades" })}
+                        style={{ fontSize: 12, padding: "6px 12px" }}>
+                        <Eye size={14} /> Ver todas
                       </Btn>
-                    </div>
-                  </Card>
-                ))}
-              </div>
+                    )}
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
+                    {grupo.atividades.map((atv) => (
+                      <Card key={atv.id} style={{ position: "relative", overflow: "hidden" }}>
+                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: `linear-gradient(90deg, ${T.blue}, ${T.blue}88)` }} />
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginTop: 4 }}>
+                          <div style={{ width: 42, height: 42, borderRadius: 12, background: T.blueLight, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <FileText size={20} color={T.blue} />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 14, fontWeight: 800, color: T.textPrimary, fontFamily: "'Nunito', sans-serif" }}>{atv.titulo}</div>
+                            {atv.enunciado && (
+                              <div style={{ fontSize: 12, color: T.textSecondary, fontFamily: "'Nunito', sans-serif", marginTop: 4, fontStyle: "italic" }}>
+                                📝 {atv.enunciado}
+                              </div>
+                            )}
+                            <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+                              <Badge color={T.blue}>Enviada em {formatData(atv.dataAtribuicao)}</Badge>
+                            </div>
+                          </div>
+                        </div>
+                        <Btn full variant="ghost" loading={removendoId === atv.id} onClick={() => handleRemoverAtribuicao(atv)}
+                          style={{ fontSize: 13, color: T.red, marginTop: 12 }}>
+                          <Trash2 size={14} /> Remover
+                        </Btn>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </div>

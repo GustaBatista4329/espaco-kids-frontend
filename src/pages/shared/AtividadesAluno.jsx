@@ -182,13 +182,26 @@ export function AtividadesAluno({ params, onNavigate, podeExcluir = false }) {
                 {/* Enunciado colado ao card */}
                 {atv.enunciado && (
                   <div style={{
-                    fontSize: 13, color: T.textPrimary, fontFamily: "'Nunito', sans-serif",
-                    padding: "10px 14px", background: T.yellowLight,
-                    borderRadius: "10px 10px 0 0",
-                    borderLeft: `4px solid ${T.yellow}`,
-                    fontStyle: "italic", fontWeight: 600,
+                    padding: "14px 18px", marginBottom: 0,
+                    background: `linear-gradient(135deg, ${T.blue}12, ${T.red}08)`,
+                    borderRadius: "14px 14px 0 0",
+                    borderLeft: `5px solid ${T.red}`,
+                    borderTop: `1px solid ${T.red}15`,
+                    borderRight: `1px solid ${T.red}10`,
                   }}>
-                    📝 {atv.enunciado}
+                    <div style={{
+                      fontSize: 11, fontWeight: 900, color: T.red, fontFamily: "'Nunito', sans-serif",
+                      textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6,
+                      display: "flex", alignItems: "center", gap: 6,
+                    }}>
+                      📝 Enunciado da Professora
+                    </div>
+                    <div style={{
+                      fontSize: 14, color: T.textPrimary, fontFamily: "'Nunito', sans-serif",
+                      fontWeight: 700, lineHeight: 1.5,
+                    }}>
+                      {atv.enunciado}
+                    </div>
                   </div>
                 )}
 
@@ -197,10 +210,12 @@ export function AtividadesAluno({ params, onNavigate, podeExcluir = false }) {
                   position: "relative", overflow: "hidden",
                   marginBottom: 0,
                 }}>
-                  <div style={{
-                    position: "absolute", top: 0, left: 0, right: 0, height: 4,
-                    background: `linear-gradient(90deg, ${T.red}, ${T.red}88)`,
-                  }} />
+                  {!atv.enunciado && (
+                    <div style={{
+                      position: "absolute", top: 0, left: 0, right: 0, height: 4,
+                      background: `linear-gradient(90deg, ${T.red}, ${T.red}88)`,
+                    }} />
+                  )}
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginTop: 4 }}>
                     <div style={{
                       width: 44, height: 44, borderRadius: 12, background: T.redLight, flexShrink: 0,
